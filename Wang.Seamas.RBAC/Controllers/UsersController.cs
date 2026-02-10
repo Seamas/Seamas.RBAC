@@ -1,10 +1,8 @@
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Wang.Seamas.RBAC.Models.Dto;
 using Wang.Seamas.RBAC.Requests;
 using Wang.Seamas.RBAC.Requests.User;
 using Wang.Seamas.RBAC.Services;
-using Wang.Seamas.Web.Common;
 using Wang.Seamas.Web.Common.Dtos;
 using Wang.Seamas.Web.Common.Utils;
 
@@ -20,7 +18,7 @@ public class UsersController(
 {
     private const string Password = "1@3$5^7*";
     
-    [HttpPost("list")]
+    [HttpPost("search")]
     public async Task<PagedResult<UserDto>> ListUsers(UserListRequest request)
     {
         var (users, total) = await userService.GetUsersAsync(
@@ -88,5 +86,9 @@ public class UsersController(
         return ApiResult.Ok();
     }
 
-    
+    [HttpPost("check-username")]
+    public async Task<bool> CheckUsername(UsernameRequest request)
+    {
+        return await userService.CheckUsernameAsync(request.Username);
+    }
 }

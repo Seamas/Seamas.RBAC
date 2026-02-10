@@ -26,9 +26,9 @@ public class AuthController(IUserService userService, ITokenService tokenService
         var authResult = new AuthResult
         {
             IsAuthenticated = true,
-            UserId = user.Id,
+            UserId = user!.Id,
             Username = user.Username,
-            Email = user.Email
+            Email = user.Email!
         };
         
         var token = tokenService.GenerateToken(authResult);
@@ -64,7 +64,7 @@ public class AuthController(IUserService userService, ITokenService tokenService
         
         Assert.NotNull(user, "当前用户不存在");
         
-        return new ProfileResponse(user.Username, user.Nickname, user.Email);
+        return new ProfileResponse(user!.Username, user.Nickname, user.Email);
     }
 
     [AllowedList]

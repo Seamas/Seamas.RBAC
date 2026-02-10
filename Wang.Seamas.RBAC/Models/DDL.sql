@@ -13,7 +13,8 @@ CREATE TABLE users (
 -- 角色表
 CREATE TABLE roles (
                        id SERIAL PRIMARY KEY,
-                       name VARCHAR(100) NOT NULL UNIQUE,
+                       code VARCHAR(100) NOT NULL UNIQUE,
+                       name VARCHAR(100) NOT NULL,
                        is_enabled BOOLEAN NOT NULL DEFAULT TRUE
 );
 

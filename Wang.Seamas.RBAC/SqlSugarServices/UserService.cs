@@ -105,5 +105,11 @@ public class UserService(ISqlSugarClient db, IPasswordHasher passwordHasher) : I
 
         return (users, totalCount);
     }
-    
+
+    public async Task<bool> CheckUsernameAsync(string username)
+    {
+        var query = db.Queryable<User>();
+        query.Where(x => x.Username == username);
+        return !await query.AnyAsync();
+    }
 }

@@ -1,26 +1,31 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using SqlSugar;
 using Wang.Seamas.RBAC.Models;
 using Wang.Seamas.RBAC.Services;
+using Wang.Seamas.Web.Common.Exceptions;
 
 namespace Wang.Seamas.RBAC.SqlSugarServices;
 
 public class RoleService(ISqlSugarClient db) : IRoleService
 {
-    public async Task<int> CreateRoleAsync(string roleName, bool isEnabled = true)
+    public async Task<int> CreateRoleAsync(string code, string roleName, bool isEnabled = true)
     {
-        if (await db.Queryable<Role>().Where(r => r.Name == roleName).AnyAsync())
-            throw new InvalidOperationException("Role already exists.");
-        return (int)await db.Insertable(new Role { Name = roleName, IsEnabled = isEnabled }).ExecuteReturnIdentityAsync();
+        if (await db.Queryable<Role>().Where(r => r.Code == code).AnyAsync())
+            throw new BizException($"角色{code}已经存在");
+        return await db.Insertable(new Role { Code = code, Name = roleName, IsEnabled = isEnabled }).ExecuteReturnIdentityAsync();
     }
 
-    public async Task<bool> UpdateRoleAsync(int roleId, string? name = null, bool? isEnabled = null)
+    public async Task<bool> UpdateRoleAsync(int roleId, string code,  string name)
     {
         var update = db.Updateable<Role>().Where(r => r.Id == roleId);
-        if (name != null) update = update.SetColumns(r => new Role { Name = name });
-        if (isEnabled != null) update = update.SetColumns(r => new Role { IsEnabled = isEnabled.Value });
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            update = update.SetColumns(r => r.Name, name);
+        }
+        if (!string.IsNullOrEmpty(code))
+        {
+            update = update.SetColumns(r => r.Code, code);
+        }
         return await update.ExecuteCommandAsync() > 0;
     }
 
@@ -37,13 +42,37 @@ public class RoleService(ISqlSugarClient db) : IRoleService
     public async Task<List<Role>> GetActiveRolesAsync()
         => await db.Queryable<Role>().Where(r => r.IsEnabled).ToListAsync();
 
-    public async Task<(List<Role> Roles, int TotalCount)> GetRolesAsync(int page, int pageSize, string? keyword = null)
+    public async Task<(List<Role> Roles, int TotalCount)> GetRolesAsync(int page, int pageSize, string? code, string? name)
     {
         var query = db.Queryable<Role>();
-        if (!string.IsNullOrEmpty(keyword))
-            query = query.Where(r => r.Name.Contains(keyword));
+        if (!string.IsNullOrEmpty(code))
+        {
+            query = query.Where(r => r.Code.Contains(code));
+        }
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            query = query.Where(r => r.Name != null && r.Name.Contains(name));
+        }
+        
         var total = await query.CountAsync();
         var roles = await query.OrderBy(r => r.Id).ToPageListAsync(page, pageSize);
         return (roles, total);
+    }
+
+    public async Task<bool> DeleteRoleAsync(int roleId) 
+        => await db.Deleteable<Role>()
+            .Where(x => x.Id == roleId)
+            .ExecuteCommandAsync() > 0;
+
+    public async Task<bool> CheckCodeAsync(int? id, string code)
+    {
+        var query = db.Queryable<Role>();
+        if (id != null && id > 0)
+        {
+            query = query.Where(r => r.Id != id);
+        }
+        query.Where(r => r.Code == code);
+        return !await query.AnyAsync();
     }
 }

@@ -31,4 +31,5 @@ public interface IUserService
         int page, int pageSize, string? username, string? nickname,  string? email);
 
 
+    Task<bool> CheckUsernameAsync(string username);
 }

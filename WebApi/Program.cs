@@ -36,9 +36,9 @@ builder.Services.AddCustomAuthentication(opt =>
     opt.TokenHeaderName = "Authorization";
     opt.TokenPrefix = "Bearer ";
     opt.TokenExpiry = TimeSpan.FromHours(2);
-    opt.SecretKey = builder.Configuration["Jwt:Secret"];
-    opt.Issuer = builder.Configuration["Jwt:Issuer"];
-    opt.Audience = builder.Configuration["Jwt:Audience"];
+    opt.SecretKey = builder.Configuration["Jwt:Secret"]!;
+    opt.Issuer = builder.Configuration["Jwt:Issuer"]!;
+    opt.Audience = builder.Configuration["Jwt:Audience"]!;
 });
 
 
