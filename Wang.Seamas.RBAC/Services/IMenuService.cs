@@ -1,27 +1,70 @@
+using Wang.Seamas.RBAC.Dtos.Menu;
 using Wang.Seamas.RBAC.Models;
 
 namespace Wang.Seamas.RBAC.Services;
 
 public interface IMenuService
 {
-    // 创建菜单
-    Task<int> CreateMenuAsync(string name, string? code = null, string? path = null,
-        int? parentId = null, int order = 0, bool isEnabled = true);
+    /// <summary>
+    /// 创建菜单
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    Task<int> CreateMenuAsync(MenuDto dto);
 
-    // 更新菜单
-    Task<bool> UpdateMenuAsync(int menuId, string? name = null, string? code = null,
-        string? path = null, int? parentId = null, int? order = null, bool? isEnabled = null);
-
-    // 获取所有菜单（树形结构，仅启用的）
-    Task<List<Menu>> GetActiveMenusAsync();
-
-    // 获取所有菜单（含禁用，用于管理后台）
-    Task<List<Menu>> GetAllMenusAsync();
-
-    // 根据 ID 获取菜单
+    /// <summary>
+    /// 更新菜单
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    Task<bool> UpdateMenuAsync(MenuDto dto);
+    
+    /// <summary>
+    /// 获取所有一级菜单
+    /// </summary>
+    /// <returns></returns>
+    Task<List<Menu>> GetFirstLevelMenusAsync();
+    
+    /// <summary>
+    /// 根据父级菜单ID，获取所有的子级菜单
+    /// </summary>
+    /// <param name="parentId"></param>
+    /// <returns></returns>
+    Task<List<Menu>> GetChildrenMenusAsync(int parentId);
+    
+    
+    /// <summary>
+    /// 根据 ID 获取菜单
+    /// </summary>
+    /// <param name="menuId"></param>
+    /// <returns></returns>
     Task<Menu?> GetMenuByIdAsync(int menuId);
 
 
     Task<List<Menu>> GetUserVisibleMenusAsync(int userId);
 
+    /// <summary>
+    /// 分页查询
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    Task<(List<Menu> Menus, int TotalCount)> QueryMenusAsync(SearchMenuDto dto);
+
+
+    /// <summary>
+    /// 删除
+    /// </summary>
+    /// <param name="menuId"></param>
+    /// <returns></returns>
+    Task<bool> DeleteMenuAsync(int menuId);
+    
+    /// <summary>
+    /// 启用/禁用菜单
+    /// </summary>
+    /// <param name="menuId"></param>
+    /// <param name="enabled"></param>
+    /// <returns></returns>
+    Task<bool> EnableMenuAsync(int menuId, bool enabled);
+
+    
 }

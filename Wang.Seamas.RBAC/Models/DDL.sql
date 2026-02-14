@@ -33,6 +33,7 @@ CREATE TABLE menus (
 CREATE TABLE api_endpoints (
                                id SERIAL PRIMARY KEY,
                                url VARCHAR(255) NOT NULL UNIQUE,
+                               api_group varchar(32),
                                description TEXT,
                                is_enabled BOOLEAN NOT NULL DEFAULT TRUE
 );

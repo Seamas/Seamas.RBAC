@@ -1,46 +1,25 @@
+using AutoMapper;
 using SqlSugar;
+using Wang.Seamas.Queryable.Helpers;
+using Wang.Seamas.RBAC.Dtos.Menu;
 using Wang.Seamas.RBAC.Models;
 using Wang.Seamas.RBAC.Services;
 
 namespace Wang.Seamas.RBAC.SqlSugarServices;
 
-public class MenuService(ISqlSugarClient db) : IMenuService
+public class MenuService(ISqlSugarClient db, IMapper mapper) : IMenuService
 {
-    public async Task<int> CreateMenuAsync(string name, string? code = null, string? path = null,
-        int? parentId = null, int sortOrder = 0, bool isEnabled = true)
+    public async Task<int> CreateMenuAsync(MenuDto dto)
     {
-        return (int)await db.Insertable(new Menu
-        {
-            Name = name,
-            Code = code,
-            Path = path,
-            ParentId = parentId,
-            SortOrder = sortOrder,
-            IsEnabled = isEnabled
-        }).ExecuteReturnIdentityAsync();
+        var menu = mapper.Map<Menu>(dto);
+        return await db.Insertable(menu)
+            .ExecuteReturnIdentityAsync();
     }
 
-    public async Task<bool> UpdateMenuAsync(int menuId, string? name = null, string? code = null,
-        string? path = null, int? parentId = null, int? sortOrder = null, bool? isEnabled = null)
+    public async Task<bool> UpdateMenuAsync(MenuDto dto)
     {
-        var m = new Menu { Id = menuId };
-        if (name != null) m.Name = name;
-        if (code != null) m.Code = code;
-        if (path != null) m.Path = path;
-        m.ParentId = parentId;
-        if (sortOrder != null) m.SortOrder = sortOrder.Value;
-        if (isEnabled != null) m.IsEnabled = isEnabled.Value;
-
-        var update = db.Updateable(m);
-        var cols = new List<string>();
-        if (name != null) cols.Add(nameof(Menu.Name));
-        if (code != null) cols.Add(nameof(Menu.Code));
-        if (path != null) cols.Add(nameof(Menu.Path));
-        cols.Add(nameof(Menu.ParentId));
-        if (sortOrder != null) cols.Add(nameof(Menu.SortOrder));
-        if (isEnabled != null) cols.Add(nameof(Menu.IsEnabled));
-
-        return await update.UpdateColumns(cols.ToArray()).ExecuteCommandAsync() > 0;
+        var menu = mapper.Map<Menu>(dto);
+        return await db.Updateable(menu).ExecuteCommandAsync() > 0;
     }
 
     public async Task<List<Menu>> GetActiveMenusAsync()
@@ -48,6 +27,10 @@ public class MenuService(ISqlSugarClient db) : IMenuService
 
     public async Task<List<Menu>> GetAllMenusAsync()
         => await db.Queryable<Menu>().OrderBy(m => m.SortOrder).ToListAsync();
+
+    public async Task<List<Menu>> GetChildrenMenusAsync(int parentId)
+        => await db.Queryable<Menu>().Where(m => m.ParentId == parentId)
+            .ToListAsync();
 
     public async Task<Menu?> GetMenuByIdAsync(int menuId)
         => await db.Queryable<Menu>().Where(m => m.Id == menuId).FirstAsync();
@@ -104,5 +87,35 @@ public class MenuService(ISqlSugarClient db) : IMenuService
                 return allowed;
             return true;
         }).ToList();
+    }
+
+    public async Task<(List<Menu> Menus, int TotalCount)> QueryMenusAsync(SearchMenuDto dto)
+    {
+        var query = db.Queryable<Menu>();
+        
+        var expression = QueryHelper.Visit<Menu>(dto);
+        query = query.Where(expression);
+        var totalCount = await query.CountAsync();
+        var menus =  await query.ToPageListAsync(dto.PageIndex, dto.PageSize);
+        return  (menus, totalCount);
+    }
+
+    public async Task<bool> DeleteMenuAsync(int menuId)
+        => await db.Deleteable<Menu>()
+            .Where(m => m.Id == menuId).ExecuteCommandAsync() > 0;
+
+    public async Task<bool> EnableMenuAsync(int menuId, bool enabled)
+    {
+        return await  db.Updateable<Menu>()
+            .SetColumns(m => m.IsEnabled, enabled)
+            .Where(m => m.Id == menuId)
+            .ExecuteCommandAsync() > 0;
+    }
+
+    public async Task<List<Menu>> GetFirstLevelMenusAsync()
+    {
+        return await db.Queryable<Menu>()
+            .Where(x => x.ParentId == null)
+            .ToListAsync();
     }
 }

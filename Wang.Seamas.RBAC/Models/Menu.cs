@@ -10,7 +10,7 @@ public class Menu
     /// <summary>
     /// 菜单名称
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; set; } = null!;
     
     /// <summary>
     /// 菜单编码

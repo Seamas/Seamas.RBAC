@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wang.Seamas.RBAC.Models.Dto;
 using Wang.Seamas.RBAC.Requests;
@@ -19,7 +20,7 @@ public class UsersController(
     private const string Password = "1@3$5^7*";
     
     [HttpPost("search")]
-    public async Task<PagedResult<UserDto>> ListUsers(UserListRequest request)
+    public async Task<PagedResult<UserDto>> ListUsers(SearchUserRequest request)
     {
         var (users, total) = await userService.GetUsersAsync(
             request.PageIndex ?? 1,
@@ -86,6 +87,7 @@ public class UsersController(
         return ApiResult.Ok();
     }
 
+    [AllowAnonymous]
     [HttpPost("check-username")]
     public async Task<bool> CheckUsername(UsernameRequest request)
     {

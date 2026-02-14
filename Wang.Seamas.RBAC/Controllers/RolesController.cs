@@ -18,7 +18,7 @@ public class RolesController(IRoleService roleService, IRolePermissionService ro
     public async Task<List<Role>> ListRoles() => await roleService.GetActiveRolesAsync();
     
     [HttpPost("search")]
-    public async Task<PagedResult<Role>> QueryRoles(RoleListRequest request)
+    public async Task<PagedResult<Role>> QueryRoles(SearchRoleRequest request)
     {
         var (list, totalCount) = await roleService.GetRolesAsync(
             request.PageIndex ?? 1, 
@@ -33,7 +33,7 @@ public class RolesController(IRoleService roleService, IRolePermissionService ro
         => await roleService.CreateRoleAsync(request.Code, request.Name, request.IsEnabled ?? true);
 
     [HttpPost("get")]
-    public async Task<Role?> GetRole(GetRoleRequest request) => await roleService.GetRoleByIdAsync(request.Id);
+    public async Task<Role?> GetRole(RoleIdRequest idRequest) => await roleService.GetRoleByIdAsync(idRequest.Id);
 
     
     [HttpPost("update")]
@@ -49,7 +49,7 @@ public class RolesController(IRoleService roleService, IRolePermissionService ro
     }
 
     [HttpPost("delete")]
-    public async Task<bool> DeleteRole(DeleteRoleRequest request)
+    public async Task<bool> DeleteRole(RoleIdRequest request)
     {
         var success = await roleService.DeleteRoleAsync(request.Id);
         Assert.IsTrue(success, "Role not found");
@@ -62,8 +62,8 @@ public class RolesController(IRoleService roleService, IRolePermissionService ro
 
 
     [HttpPost("check-code")]
-    public async Task<bool> CheckRoleCode(RoleCodeRequest request) =>
-        await roleService.CheckCodeAsync(request.Id, request.Code);
+    public async Task<bool> CheckRoleCode(RoleCodeCheckRequest checkRequest) =>
+        await roleService.CheckCodeAsync(checkRequest.Id, checkRequest.Code);
 
     [HttpPost("set-menu-permissions")]
     public async Task<bool> SetMenuPermissions(SetRoleMenuPermissionsRequest request)

@@ -1,3 +1,3 @@
 namespace Wang.Seamas.RBAC.Requests.Role;
 
-public record GetRoleRequest(int Id);
+public record RoleIdRequest(int Id);

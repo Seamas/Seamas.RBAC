@@ -10,6 +10,12 @@ public class ApiEndpoint
     /// 唯一，如 "/api/users"
     /// </summary>
     public string Url { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 接口分组
+    /// </summary>
+    public string? ApiGroup { get; set; }
+    
     public string? Description { get; set; }
     
     /// <summary>

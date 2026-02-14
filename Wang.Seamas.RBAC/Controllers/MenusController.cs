@@ -1,57 +1,65 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Wang.Seamas.RBAC.Dtos.Menu;
 using Wang.Seamas.RBAC.Models;
-using Wang.Seamas.RBAC.Requests;
+using Wang.Seamas.RBAC.Requests.Menu;
 using Wang.Seamas.RBAC.Services;
+using Wang.Seamas.Web.Common.Dtos;
 using Wang.Seamas.Web.Common.Utils;
 
 namespace Wang.Seamas.RBAC.Controllers;
 
 [ApiController]
 [Route("rbac/menus")]
-public class MenusController(IMenuService menuService) : ControllerBase
+public class MenusController(IMenuService menuService, IMapper mapper) : ControllerBase
 {
-    [HttpPost("all")]
-    public async Task<List<Menu>> GetAllMenus()
-        => await menuService.GetAllMenusAsync();
+    [HttpPost("search")]
+    public async Task<PagedResult<Menu>> QueryMenus(SearchMenuRequest request)
+    {
+        var dto = mapper.Map<SearchMenuDto>(request);
+        var (list, total) = await menuService.QueryMenusAsync(dto);
+        return new PagedResult<Menu>(list, total, dto.PageIndex, dto.PageSize);
+    }
+    
+    [HttpPost("get")]
+    public async Task<Menu?> GetMenu(MenuIdRequest idRequest)
+    {
+        var menu = await menuService.GetMenuByIdAsync(idRequest.Id);
+        return menu;
+    }
 
-    [HttpPost("active")]
-    public async Task<List<Menu>> GetActiveMenus()
-        => await menuService.GetActiveMenusAsync();
+    [HttpGet("first-level")]
+    public async Task<List<Menu>> GetFirstLevelMenusAsync()
+        => await menuService.GetFirstLevelMenusAsync();
+    
 
     [HttpPost("create")]
     public async Task<int> CreateMenu(CreateMenuRequest request)
     {
-        var id = await menuService.CreateMenuAsync(
-            request.Name,
-            request.Code,
-            request.Path,
-            request.ParentId,
-            request.SortOrder ?? 0,
-            request.IsEnabled ?? true
-        );
+        var dto = mapper.Map<MenuDto>(request);
+        var id = await menuService.CreateMenuAsync(dto);
         return id;
     }
-
-    [HttpPost("get")]
-    public async Task<Menu?> GetMenu(GetMenuRequest request)
-    {
-        var menu = await menuService.GetMenuByIdAsync(request.Id);
-        return menu;
-    }
-
+    
     [HttpPost("update")]
     public async Task<bool> UpdateMenu(UpdateMenuRequest request)
     {
-        var success = await menuService.UpdateMenuAsync(
-            request.Id,
-            request.Name,
-            request.Code,
-            request.Path,
-            request.ParentId,
-            request.SortOrder,
-            request.IsEnabled
-        );
-        Assert.IsTrue(success, "Menu not found");
+        var dto = mapper.Map<MenuDto>(request);
+        var success = await menuService.UpdateMenuAsync(dto);
+        Assert.IsTrue(success, $"找不到对应的菜单{request.Id}");
         return success;
+    }
+
+    [HttpPost("delete")]
+    public async Task<bool> DeleteMenu(MenuIdRequest request)
+    {
+        return await menuService.DeleteMenuAsync(request.Id);
+    }
+
+
+    [HttpPost("enable")]
+    public async Task<bool> EnableMenu(EnableMenuRequest request)
+    {
+        return await menuService.EnableMenuAsync(request.Id, request.Enabled);
     }
 }

@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Dynamic.Core;
 using System.Text.Json;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Http.Json;
 using Wang.Seamas.RBAC.Controllers;
 using SqlSugar;
 using Wang.Seamas.RBAC.Configure;
+using Wang.Seamas.RBAC.Profiles;
+using Wang.Seamas.RBAC.Services;
 using Wang.Seamas.Web.Filters;
 using Wang.Seamas.Web.Common.Extensions;
 using Wang.Seamas.Web.Extensions;
@@ -13,6 +16,11 @@ using Wang.Seamas.Web.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+builder.Services.AddAutoMapper(config =>
+{
+    config.AddMaps(typeof(MenuProfile).Assembly);
+});
 
 builder.Services.AddControllers(opt =>
     {
@@ -35,7 +43,7 @@ builder.Services.AddCustomAuthentication(opt =>
 {
     opt.TokenHeaderName = "Authorization";
     opt.TokenPrefix = "Bearer ";
-    opt.TokenExpiry = TimeSpan.FromHours(2);
+    opt.TokenExpiry = TimeSpan.FromDays(2);
     opt.SecretKey = builder.Configuration["Jwt:Secret"]!;
     opt.Issuer = builder.Configuration["Jwt:Issuer"]!;
     opt.Audience = builder.Configuration["Jwt:Audience"]!;
@@ -101,6 +109,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
     }
+    
 });
 
 
