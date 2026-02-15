@@ -1,5 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq.Dynamic.Core;
 using System.Text.Json;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -7,8 +5,6 @@ using Microsoft.AspNetCore.Http.Json;
 using Wang.Seamas.RBAC.Controllers;
 using SqlSugar;
 using Wang.Seamas.RBAC.Configure;
-using Wang.Seamas.RBAC.Profiles;
-using Wang.Seamas.RBAC.Services;
 using Wang.Seamas.Web.Filters;
 using Wang.Seamas.Web.Common.Extensions;
 using Wang.Seamas.Web.Extensions;
@@ -17,9 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
+// 引入 MediatR
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblies(typeof(AuthController).Assembly);
+});
+
 builder.Services.AddAutoMapper(config =>
 {
-    config.AddMaps(typeof(MenuProfile).Assembly);
+    config.AddMaps(typeof(UsersController).Assembly);
 });
 
 builder.Services.AddControllers(opt =>
@@ -109,7 +111,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
     }
-    
+
 });
 
 

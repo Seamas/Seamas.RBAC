@@ -1,75 +1,85 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Wang.Seamas.RBAC.Models.Dto;
+using Wang.Seamas.RBAC.Application.Features.Users.Commands.CreateUser;
+using Wang.Seamas.RBAC.Application.Features.Users.Commands.DisableUser;
+using Wang.Seamas.RBAC.Application.Features.Users.Commands.EnableUser;
+using Wang.Seamas.RBAC.Application.Features.Users.Commands.ResetPassword;
+using Wang.Seamas.RBAC.Application.Features.Users.Commands.UpdateUser;
+using Wang.Seamas.RBAC.Application.Features.Users.DTOs;
+using Wang.Seamas.RBAC.Application.Features.Users.Queries.CheckUsername;
+using Wang.Seamas.RBAC.Application.Features.Users.Queries.GetUser;
+using Wang.Seamas.RBAC.Application.Features.Users.Queries.GetUserPage;
+using Wang.Seamas.RBAC.Domain.Interfaces;
 using Wang.Seamas.RBAC.Requests;
-using Wang.Seamas.RBAC.Requests.User;
-using Wang.Seamas.RBAC.Services;
-using Wang.Seamas.Web.Common.Dtos;
-using Wang.Seamas.Web.Common.Utils;
+using Wang.Seamas.Web.Common.DTOs;
 
 namespace Wang.Seamas.RBAC.Controllers;
 
 [ApiController]
 [Route("rbac/users")]
 public class UsersController(
-    IUserService userService,
     IUserRoleService userRoleService,
-    IUserPermissionService userPermissionService)
+    IUserPermissionService userPermissionService,
+    IMediator mediator)
     : ControllerBase
 {
-    private const string Password = "1@3$5^7*";
+
     
     [HttpPost("search")]
-    public async Task<PagedResult<UserDto>> ListUsers(SearchUserRequest request)
+    public async Task<ResultPage<UserDto>> ListUsers(GetUserPageQuery request)
     {
-        var (users, total) = await userService.GetUsersAsync(
-            request.PageIndex ?? 1,
-            request.PageSize ?? 10,
-            request.Username,
-            request.Nickname,
-            request.Email
-        );
-        return new PagedResult<UserDto>(users, total, request.PageIndex ?? 1, request.PageSize ?? 10);
+        return await mediator.Send(request);
     }
 
     [HttpPost("create")]
-    public async Task<bool> CreateUser(CreateUserRequest request)
+    public async Task<bool> CreateUser(CreateUserCommand command)
     {
-        var result = await userService.CreateUserAsync(
-            request.Username,
-            Password,
-            request.Nickname,
-            request.Email,
-            true
-        );
-        return result > 0;
+        return await mediator.Send(command);
     }
 
     [HttpPost("update")]
-    public async Task<bool> UpdateUser(UpdateUserRequest request)
+    public async Task<bool> UpdateUser(UpdateUserCommand request)
     {
-        return await userService.UpdateUserProfileAsync(request.Id, request.Nickname, request.Email);
+        return await mediator.Send(request);
     }
     
 
     [HttpPost("get")]
-    public async Task<UserDto?> GetUser(GetUserRequest request)
+    public async Task<UserDto?> GetUser(GetUserQuery request)
     {
-        var user = await userService.GetUserByIdAsync(request.Id);
-        Assert.NotNull(user, "User not found");
-        return user;
+        return await mediator.Send(request);
     }
+
+    #region  启用/禁用
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
 
     [HttpPost("enable")]
-    public async Task<bool> SetEnabled(EnableUserRequest request)
+    public async Task<bool> SetEnabled(EnableUserCommand request)
     {
-        return await userService.EnableUserAsync(request.Id, request.Enabled);
+        return await mediator.Send(request);
     }
 
-    [HttpPost("reset-password")]
-    public async Task<bool> ResetPassword(GetUserRequest request)
+    [HttpPost("disable")]
+    public async Task<bool> SetDisabled(DisableUserCommand request)
     {
-        return await userService.ResetPasswordAsync(request.Id, Password);
+        return await mediator.Send(request);
+    }
+
+    #endregion
+    
+    
+    
+
+    [HttpPost("reset-password")]
+    public async Task<bool> ResetPassword(ResetPasswordCommand command)
+    {
+        return await mediator.Send(command);
     }
     
 
@@ -89,8 +99,8 @@ public class UsersController(
 
     [AllowAnonymous]
     [HttpPost("check-username")]
-    public async Task<bool> CheckUsername(UsernameRequest request)
+    public async Task<bool> CheckUsername(CheckUsernameCommand request)
     {
-        return await userService.CheckUsernameAsync(request.Username);
+        return await mediator.Send(request);
     }
 }

@@ -1,4 +1,4 @@
-using Wang.Seamas.RBAC.SqlSugarServices;
+using Wang.Seamas.RBAC.Application.Services;
 
 namespace Wang.Seamas.RBAC.Configure;
 

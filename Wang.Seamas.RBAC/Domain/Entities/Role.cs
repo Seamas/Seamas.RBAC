@@ -1,0 +1,24 @@
+namespace Wang.Seamas.RBAC.Domain.Entities;
+
+public class Role
+{
+    /// <summary>
+    /// ID
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// 角色编码
+    /// </summary>
+    public string Code { get; set; } = null!;
+    
+    /// <summary>
+    /// 角色名称
+    /// </summary>
+    public string? Name { get; set; } = null!;
+    
+    /// <summary>
+    /// 是否启用
+    /// </summary>
+    public bool IsEnabled { get; set; } = true;
+}

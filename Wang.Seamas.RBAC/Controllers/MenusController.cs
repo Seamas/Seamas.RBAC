@@ -1,65 +1,72 @@
-using AutoMapper;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Wang.Seamas.RBAC.Dtos.Menu;
-using Wang.Seamas.RBAC.Models;
-using Wang.Seamas.RBAC.Requests.Menu;
-using Wang.Seamas.RBAC.Services;
-using Wang.Seamas.Web.Common.Dtos;
-using Wang.Seamas.Web.Common.Utils;
+using Wang.Seamas.RBAC.Application.Features.Menus.Commands.CreateMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Commands.DeleteMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Commands.DisableMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Commands.EnableMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Commands.UpdateMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Queries.FirstLevelMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Queries.GetMenu;
+using Wang.Seamas.RBAC.Application.Features.Menus.Queries.GetMenuPage;
+using Wang.Seamas.RBAC.Domain.Entities;
+using Wang.Seamas.Web.Common.DTOs;
 
 namespace Wang.Seamas.RBAC.Controllers;
 
 [ApiController]
 [Route("rbac/menus")]
-public class MenusController(IMenuService menuService, IMapper mapper) : ControllerBase
+public class MenusController(IMediator mediator) : ControllerBase
 {
     [HttpPost("search")]
-    public async Task<PagedResult<Menu>> QueryMenus(SearchMenuRequest request)
+    public async Task<ResultPage<Menu>> QueryMenus(GetMenuPageQuery request)
     {
-        var dto = mapper.Map<SearchMenuDto>(request);
-        var (list, total) = await menuService.QueryMenusAsync(dto);
-        return new PagedResult<Menu>(list, total, dto.PageIndex, dto.PageSize);
+        return await mediator.Send(request);
     }
     
     [HttpPost("get")]
-    public async Task<Menu?> GetMenu(MenuIdRequest idRequest)
+    public async Task<Menu?> GetMenu(GetMenuQuery request)
     {
-        var menu = await menuService.GetMenuByIdAsync(idRequest.Id);
-        return menu;
+        return await mediator.Send(request);
     }
 
     [HttpGet("first-level")]
-    public async Task<List<Menu>> GetFirstLevelMenusAsync()
-        => await menuService.GetFirstLevelMenusAsync();
+    public async Task<IEnumerable<Menu>> GetFirstLevelMenusAsync()
+    {
+        var query = new FirstLevelMenuQuery();
+        return await mediator.Send(query);
+    }
+        
     
 
     [HttpPost("create")]
-    public async Task<int> CreateMenu(CreateMenuRequest request)
+    public async Task<bool> CreateMenu(CreateMenuCommand request)
     {
-        var dto = mapper.Map<MenuDto>(request);
-        var id = await menuService.CreateMenuAsync(dto);
-        return id;
+        return await mediator.Send(request);
     }
     
     [HttpPost("update")]
-    public async Task<bool> UpdateMenu(UpdateMenuRequest request)
+    public async Task<bool> UpdateMenu(UpdateMenuCommand request)
     {
-        var dto = mapper.Map<MenuDto>(request);
-        var success = await menuService.UpdateMenuAsync(dto);
-        Assert.IsTrue(success, $"找不到对应的菜单{request.Id}");
-        return success;
+        return await mediator.Send(request);
     }
 
     [HttpPost("delete")]
-    public async Task<bool> DeleteMenu(MenuIdRequest request)
+    public async Task<bool> DeleteMenu(DeleteMenuCommand request)
     {
-        return await menuService.DeleteMenuAsync(request.Id);
+        return await mediator.Send(request);
     }
 
 
     [HttpPost("enable")]
-    public async Task<bool> EnableMenu(EnableMenuRequest request)
+    public async Task<bool> EnableMenu(EnableMenuCommand request)
     {
-        return await menuService.EnableMenuAsync(request.Id, request.Enabled);
+        return await mediator.Send(request);
+    }
+    
+    
+    [HttpPost("disable")]
+    public async Task<bool> DisableMenu(DisableMenuCommand request)
+    {
+        return await mediator.Send(request);
     }
 }

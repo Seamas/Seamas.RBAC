@@ -1,69 +1,74 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Wang.Seamas.RBAC.Models;
+using Wang.Seamas.RBAC.Application.Features.Roles.Commands.CreateRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Commands.DeleteRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Commands.DisableRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Commands.EnableRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Commands.UpdateRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Queries.ActiveRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Queries.CheckCode;
+using Wang.Seamas.RBAC.Application.Features.Roles.Queries.GetRole;
+using Wang.Seamas.RBAC.Application.Features.Roles.Queries.GetRolePage;
+using Wang.Seamas.RBAC.Domain.Entities;
+using Wang.Seamas.RBAC.Domain.Interfaces;
 using Wang.Seamas.RBAC.Requests;
-using Wang.Seamas.RBAC.Requests.Role;
-using Wang.Seamas.RBAC.Services;
-using Wang.Seamas.Web.Common.Dtos;
+using Wang.Seamas.Web.Common.DTOs;
 using Wang.Seamas.Web.Common.Utils;
 
 namespace Wang.Seamas.RBAC.Controllers;
 
 [ApiController]
 [Route("rbac/roles")]
-public class RolesController(IRoleService roleService, IRolePermissionService rolePermissionService)
+public class RolesController(IRolePermissionService rolePermissionService, IMediator mediator)
     : ControllerBase
 {
 
     [HttpGet("list")]
-    public async Task<List<Role>> ListRoles() => await roleService.GetActiveRolesAsync();
+    public async Task<IEnumerable<Role>> ListRoles()
+    {
+        var request = new ActiveRoleQuery();
+        return await mediator.Send(request);
+    }
     
     [HttpPost("search")]
-    public async Task<PagedResult<Role>> QueryRoles(SearchRoleRequest request)
+    public async Task<ResultPage<Role>> QueryRoles(GetRolePageQuery request)
     {
-        var (list, totalCount) = await roleService.GetRolesAsync(
-            request.PageIndex ?? 1, 
-            request.PageSize ?? 10, 
-            request.Code, 
-            request.Name);
-        return new PagedResult<Role>(list, totalCount, request.PageIndex ?? 1, request.PageSize ?? 10);
+        return await mediator.Send(request);
     }
 
     [HttpPost("create")]
-    public async Task<int> CreateRole(CreateRoleRequest request) 
-        => await roleService.CreateRoleAsync(request.Code, request.Name, request.IsEnabled ?? true);
+    public async Task<bool> CreateRole(CreateRoleCommand request) 
+        => await mediator.Send(request);
 
     [HttpPost("get")]
-    public async Task<Role?> GetRole(RoleIdRequest idRequest) => await roleService.GetRoleByIdAsync(idRequest.Id);
+    public async Task<Role?> GetRole(GetRoleQuery request) => await mediator.Send(request);
 
     
     [HttpPost("update")]
-    public async Task<bool> UpdateRole(UpdateRoleRequest request)
+    public async Task<bool> UpdateRole(UpdateRoleCommand request)
     {
-        var success = await roleService.UpdateRoleAsync(
-            request.Id,
-            request.Code,
-            request.Name
-        );
-        Assert.IsTrue(success, "Role not found");
-        return success;
+       return await  mediator.Send(request);
     }
 
     [HttpPost("delete")]
-    public async Task<bool> DeleteRole(RoleIdRequest request)
+    public async Task<bool> DeleteRole(DeleteRoleCommand request)
     {
-        var success = await roleService.DeleteRoleAsync(request.Id);
-        Assert.IsTrue(success, "Role not found");
-        return success;
+        return await mediator.Send(request);
     }
 
     [HttpPost("enable")]
-    public async Task<bool> EnableRole(EnableRoleRequest request) 
-        => await roleService.SetRoleEnabledAsync(request.Id, request.Enabled);
+    public async Task<bool> EnableRole(EnableRoleCommand request)
+        => await mediator.Send(request);
+    
+    
+    [HttpPost("disable")]
+    public async Task<bool> DisableRole(DisableRoleCommand request) 
+        => await mediator.Send(request);
 
 
     [HttpPost("check-code")]
-    public async Task<bool> CheckRoleCode(RoleCodeCheckRequest checkRequest) =>
-        await roleService.CheckCodeAsync(checkRequest.Id, checkRequest.Code);
+    public async Task<bool> CheckRoleCode(CheckCodeQuery checkRequest) =>
+        await mediator.Send(checkRequest);
 
     [HttpPost("set-menu-permissions")]
     public async Task<bool> SetMenuPermissions(SetRoleMenuPermissionsRequest request)
