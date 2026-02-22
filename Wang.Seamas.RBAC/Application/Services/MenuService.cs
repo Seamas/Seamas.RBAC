@@ -96,7 +96,7 @@ public class MenuService(ISqlSugarClient db, IMapper mapper) : IMenuService
             .InnerJoin<Role>((m, rm, ur, r) => r.IsEnabled)
             // 同时需要 not exists 
             .Where((m, rm, ur, r) => SqlFunc.Subqueryable<UserMenuPermission>()
-                .Where((x) => x.MenuId == m.Id).NotAny())
+                .Where((x) => x.UserId == userId && x.MenuId == m.Id).NotAny())
             .Distinct()
             .ToListAsync();
 
