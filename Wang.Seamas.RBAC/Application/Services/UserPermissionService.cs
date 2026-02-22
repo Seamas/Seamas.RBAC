@@ -6,53 +6,71 @@ namespace Wang.Seamas.RBAC.Application.Services;
 
 public class UserPermissionService(ISqlSugarClient db) : IUserPermissionService
 {
-    public async Task SetUserMenuPermissionAsync(int userId, int menuId, bool isAllowed)
+
+    public async Task SetUserMenuPermissionsAsync(int userId, List<int> menuIds)
     {
-        var firstAsync = await db.Queryable<UserMenuPermission>().Where(x => x.UserId == userId && x.MenuId == menuId)
-            .FirstAsync();
-        if (firstAsync != null)
+        await db.Deleteable<UserMenuPermission>().Where(x => x.UserId == userId).ExecuteCommandAsync();
+        var data = menuIds.Select(item => new UserMenuPermission() { UserId = userId, MenuId = item }).ToList();
+        if (data.Count > 0)
         {
-            await db.Updateable<UserMenuPermission>()
-                .SetColumns(x => new UserMenuPermission { IsAllowed = isAllowed })
-                .ExecuteCommandAsync();
-        }
-        else
-        {
-            await db.Insertable<UserMenuPermission>(new { UserId = userId, MenuId = menuId, IsAllowed = isAllowed }).ExecuteCommandAsync();
+            await db.Insertable<UserMenuPermission>(data).ExecuteCommandAsync();
         }
     }
+    
 
-    public async Task SetUserMenuPermissionsAsync(int userId, Dictionary<int, bool> permissions)
+    public async Task SetUserApiPermissionsAsync(int userId, List<int> apiEndpointIds)
     {
-        foreach (var (menuId, allowed) in permissions)
-            await SetUserMenuPermissionAsync(userId, menuId, allowed);
-    }
-
-    public async Task SetUserApiPermissionAsync(int userId, int apiEndpointId, bool isAllowed)
-    {
-        var firstAsync = await db.Queryable<UserApiPermission>().Where(x => x.UserId == userId && x.ApiEndpointId == apiEndpointId)
-            .FirstAsync();
-        if (firstAsync != null)
+        await db.Deleteable<UserApiPermission>().Where(x => x.UserId == userId).ExecuteCommandAsync();
+        var data = apiEndpointIds.Select(item => new UserApiPermission(){UserId = userId, ApiEndpointId = item}).ToList();
+        if (data.Count > 0)
         {
-            await db.Updateable<UserApiPermission>()
-                .SetColumns(x => new UserApiPermission { IsAllowed = isAllowed })
-                .ExecuteCommandAsync();
-        }
-        else
-        {
-            await db.Insertable<UserApiPermission>(new { UserId = userId, ApiEndpointId = apiEndpointId, IsAllowed = isAllowed }).ExecuteCommandAsync();
+            await db.Insertable<UserApiPermission>(data).ExecuteCommandAsync();
         }
     }
-
-    public async Task SetUserApiPermissionsAsync(int userId, Dictionary<int, bool> permissions)
+    
+    public async Task RemoveDeprecatedMenuPermissionAsync()
     {
-        foreach (var (apiId, allowed) in permissions)
-            await SetUserApiPermissionAsync(userId, apiId, allowed);
+        await db.Deleteable<UserMenuPermission>()
+            .Where(ump => SqlFunc.Subqueryable<UserRole>()
+                .InnerJoin<Role>((ur, r) => ur.RoleId == r.Id)
+                .InnerJoin<RoleMenuPermission>((ur, r, rmp) => r.Id == rmp.RoleId)
+                .Where((ur, r, rmp) => ump.MenuId == rmp.MenuId && ump.UserId == ur.UserId)
+                .NotAny())
+            .ExecuteCommandAsync();
     }
 
-    public async Task RemoveUserMenuPermissionAsync(int userId, int menuId)
-        => await db.Deleteable<UserMenuPermission>().Where(x => x.UserId == userId).Where(x => x.MenuId == menuId).ExecuteCommandAsync();
+    public async Task RemoveDeprecatedApiPermissionAsync()
+    {
+        await db.Deleteable<UserApiPermission>()
+            .Where(uap => SqlFunc.Subqueryable<UserRole>()
+                .InnerJoin<Role>((ur, r) => ur.RoleId == r.Id)
+                .InnerJoin<RoleApiPermission>((ur, r, rap) => r.Id == rap.RoleId)
+                .Where((ur, r, rap) => uap.ApiEndpointId == rap.ApiEndpointId && uap.UserId == ur.UserId)
+                .NotAny())
+            .ExecuteCommandAsync();
+    }
 
-    public async Task RemoveUserApiPermissionAsync(int userId, int apiEndpointId)
-        => await db.Deleteable<UserApiPermission>().Where(x => x.UserId == userId).Where(x => x.ApiEndpointId == apiEndpointId).ExecuteCommandAsync();
+    public async Task RemoveDeprecatedUserMenuPermissionAsync(int userId)
+    {
+        await db.Deleteable<UserMenuPermission>()
+            .Where(ump => ump.UserId == userId)
+            .Where(ump =>  SqlFunc.Subqueryable<UserRole>()
+                .InnerJoin<Role>((ur, r) => ur.RoleId == r.Id)
+                .InnerJoin<RoleMenuPermission>((ur, r, rmp) => r.Id == rmp.RoleId)
+                .Where((ur, r, rmp) => ump.MenuId == rmp.MenuId && ump.UserId == ur.UserId)
+                .NotAny())
+            .ExecuteCommandAsync();
+    }
+
+    public async Task RemoveDeprecatedUserApiPermissionAsync(int userId)
+    {
+        await db.Deleteable<UserApiPermission>()
+            .Where(uap => uap.UserId == userId)
+            .Where(uap => SqlFunc.Subqueryable<UserRole>()
+                .InnerJoin<Role>((ur, r) => ur.RoleId == r.Id)
+                .InnerJoin<RoleApiPermission>((ur, r, rap) => r.Id == rap.RoleId)
+                .Where((ur, r, rap) => uap.ApiEndpointId == rap.ApiEndpointId && uap.UserId == ur.UserId)
+                .NotAny())
+            .ExecuteCommandAsync();
+    }
 }

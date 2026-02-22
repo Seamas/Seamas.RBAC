@@ -26,7 +26,8 @@ CREATE TABLE menus (
                        path VARCHAR(255),
                        parent_id INTEGER REFERENCES menus(id) ON DELETE SET NULL,
                        sort_order INTEGER NOT NULL DEFAULT 0,
-                       is_enabled BOOLEAN NOT NULL DEFAULT TRUE
+                       is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                       icon VARCHAR(20)
 );
 
 -- API 接口表
@@ -56,7 +57,6 @@ CREATE TABLE role_menu_permissions (
 CREATE TABLE user_menu_permissions (
                                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                                        menu_id INTEGER NOT NULL REFERENCES menus(id) ON DELETE CASCADE,
-                                       is_allowed BOOLEAN NOT NULL,
                                        PRIMARY KEY (user_id, menu_id)
 );
 
@@ -71,7 +71,6 @@ CREATE TABLE role_api_permissions (
 CREATE TABLE user_api_permissions (
                                       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                                       api_endpoint_id INTEGER NOT NULL REFERENCES api_endpoints(id) ON DELETE CASCADE,
-                                      is_allowed BOOLEAN NOT NULL,
                                       PRIMARY KEY (user_id, api_endpoint_id)
 );
 

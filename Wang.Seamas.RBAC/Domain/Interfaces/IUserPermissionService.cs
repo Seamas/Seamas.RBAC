@@ -2,21 +2,38 @@ namespace Wang.Seamas.RBAC.Domain.Interfaces;
 
 public interface IUserPermissionService
 {
-    // 设置用户对某菜单的显式权限（允许/拒绝）
-    Task SetUserMenuPermissionAsync(int userId, int menuId, bool isAllowed);
-
+    
     // 批量设置用户菜单权限
-    Task SetUserMenuPermissionsAsync(int userId, Dictionary<int, bool> permissions);
+    Task SetUserMenuPermissionsAsync(int userId, List<int> menuIds);
 
-    // 设置用户对某 API 的显式权限
-    Task SetUserApiPermissionAsync(int userId, int apiEndpointId, bool isAllowed);
-
+    
     // 批量设置用户 API 权限
-    Task SetUserApiPermissionsAsync(int userId, Dictionary<int, bool> permissions);
+    Task SetUserApiPermissionsAsync(int userId, List<int> apiEndpointIds);
+    
 
-    // 清除用户对某菜单的特例权限（回退到角色）
-    Task RemoveUserMenuPermissionAsync(int userId, int menuId);
-
-    // 清除用户对某 API 的特例权限
-    Task RemoveUserApiPermissionAsync(int userId, int apiEndpointId);
+    /// <summary>
+    /// 清除过期的用户-菜单权限
+    /// </summary>
+    /// <returns></returns>
+    Task RemoveDeprecatedMenuPermissionAsync();
+    
+    /// <summary>
+    /// 清除过期的用户-接口权限
+    /// </summary>
+    /// <returns></returns>
+    Task RemoveDeprecatedApiPermissionAsync();
+    
+    /// <summary>
+    /// 移除用户的过期菜单权限
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task RemoveDeprecatedUserMenuPermissionAsync(int userId);
+    
+    /// <summary>
+    /// 移除用户的过期API权限
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    Task RemoveDeprecatedUserApiPermissionAsync(int userId);
 }

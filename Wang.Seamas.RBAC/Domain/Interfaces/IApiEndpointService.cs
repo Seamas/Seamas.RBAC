@@ -12,6 +12,9 @@ public interface IApiEndpointService
     // 获取所有 API 列表
     Task<List<ApiEndpoint>> GetAllApiEndpointsAsync();
 
+
+    Task<List<ApiEndpoint>> GetApiEndpointByRoleAsync(int roleId);
+
     // 根据 URL 获取
     Task<ApiEndpoint?> GetApiEndpointByUrlAsync(string url);
     
@@ -48,5 +51,9 @@ public interface IApiEndpointService
 
     Task<bool> DeleteApiEndpointAsync(int id);
 
-    Task<bool> InitApiEndpointsAsync(IEnumerable<string> apiEndpoints);
+    Task<bool> InitApiEndpointsAsync(List<ApiEndpoint> apiEndpoints);
+    
+    Task<List<ApiEndpoint>> GetApiPermissionsByUserIdAsync(int userId);
+    
+    Task<List<ApiEndpoint>> GetApisByUserIdAsync(int userId);
 }

@@ -15,21 +15,20 @@ public class PermissionChecker(ISqlSugarClient db) : IPermissionChecker
         var endpoint = await db.Queryable<ApiEndpoint>().Where(a => a.Url == url && a.IsEnabled).FirstAsync();
         if (endpoint == null) return false;
 
-        // 3. 用户特例？
-        var userPerm = await db.Queryable<UserApiPermission>()
+        // 3. 用户特例, 只允许禁用覆盖
+        var disAllowed = await db.Queryable<UserApiPermission>()
             .Where(x => x.UserId == userId)
             .Where(x => x.ApiEndpointId == endpoint.Id)
-            .FirstAsync();
-            
-        if (userPerm != null) return userPerm.IsAllowed;
-
+            .AnyAsync();
+        
+        if (disAllowed) return false;
+        
         // 4. 角色权限？
         return await db.Queryable<UserRole>()
-            .InnerJoin<Role>((ur, r) => ur.RoleId == r.Id)
+            .InnerJoin<Role>((ur, r) => ur.RoleId == r.Id && r.IsEnabled)
             .InnerJoin<RoleApiPermission>((ur, r, rap) => r.Id == rap.RoleId)
             .Where((ur,r, rap) => ur.UserId == userId)
             .Where((ur,r, rap) => rap.ApiEndpointId == endpoint.Id)
-            .Where((ur,r, rap) => r.IsEnabled)
             .AnyAsync();
     }
     

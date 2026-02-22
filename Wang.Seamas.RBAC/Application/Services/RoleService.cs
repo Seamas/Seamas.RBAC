@@ -1,5 +1,6 @@
 using SqlSugar;
 using Wang.Seamas.Queryable.Helpers;
+using Wang.Seamas.RBAC.Application.Features.Users.DTOs;
 using Wang.Seamas.RBAC.Domain.Common;
 using Wang.Seamas.RBAC.Domain.Entities;
 using Wang.Seamas.RBAC.Domain.Interfaces;
@@ -70,5 +71,32 @@ public class RoleService(ISqlSugarClient db) : IRoleService
         }
         query.Where(r => r.Code == code);
         return !await query.AnyAsync();
+    }
+
+
+
+    public async Task<List<UserDto>> GetUsersByRoleAsync(int roleId)
+    {
+        return await db.Queryable<User>()
+            .InnerJoin<UserRole>((u, ur) => ur.UserId == u.Id)
+            .Where((u, ur) => ur.RoleId == roleId)
+            .Select(u => new UserDto
+            {
+                Id = u.Id, 
+                Nickname = u.Nickname, 
+                Username = u.Username, 
+                IsEnabled = u.IsEnabled,
+                Email = u.Email
+            })
+            .ToListAsync();
+    }
+
+    public async Task<bool> AssignUsersAsync(int roleId, List<int> userIds)
+    {
+        var userRoles = userIds.Select(item => new UserRole(){RoleId = roleId, UserId = item}).ToList();
+
+        await db.Deleteable<UserRole>().Where(ur => ur.RoleId == roleId).ExecuteCommandAsync();
+        await db.Insertable<UserRole>(userRoles).ExecuteCommandAsync();
+        return true;
     }
 }

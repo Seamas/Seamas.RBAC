@@ -4,7 +4,7 @@ using Wang.Seamas.RBAC.Domain.Interfaces;
 
 namespace Wang.Seamas.RBAC.Application.Features.Roles.Queries.ActiveRole;
 
-public class ActiveRoleQueryHandler : IRequestHandler<ActiveRoleQuery, IEnumerable<Role>>
+public class ActiveRoleQueryHandler : IRequestHandler<ActiveRoleQuery, List<Role>>
 {
     private readonly IRoleService _roleService;
 
@@ -13,7 +13,7 @@ public class ActiveRoleQueryHandler : IRequestHandler<ActiveRoleQuery, IEnumerab
         _roleService = roleService;
     }
 
-    public async Task<IEnumerable<Role>> Handle(ActiveRoleQuery request, CancellationToken cancellationToken)
+    public async Task<List<Role>> Handle(ActiveRoleQuery request, CancellationToken cancellationToken)
     {
         return await _roleService.GetActiveRolesAsync();
     }

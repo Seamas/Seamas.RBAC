@@ -6,6 +6,7 @@ public class MenuDto
     public required string Name { get; set; }
     public required string Code { get; set; }
     public string? Path { get; set; }
+    public string? Icon { get; set; }
     public int? ParentId 
     { 
         get; 

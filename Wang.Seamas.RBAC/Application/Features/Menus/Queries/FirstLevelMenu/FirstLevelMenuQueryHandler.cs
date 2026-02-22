@@ -4,7 +4,7 @@ using Wang.Seamas.RBAC.Domain.Interfaces;
 
 namespace Wang.Seamas.RBAC.Application.Features.Menus.Queries.FirstLevelMenu;
 
-public class FirstLevelMenuQueryHandler : IRequestHandler<FirstLevelMenuQuery, IEnumerable<Menu>>
+public class FirstLevelMenuQueryHandler : IRequestHandler<FirstLevelMenuQuery, List<Menu>>
 {
     private readonly IMenuService _menuService;
 
@@ -13,7 +13,7 @@ public class FirstLevelMenuQueryHandler : IRequestHandler<FirstLevelMenuQuery, I
         _menuService = menuService;
     }
 
-    public async Task<IEnumerable<Menu>> Handle(FirstLevelMenuQuery request, CancellationToken cancellationToken)
+    public async Task<List<Menu>> Handle(FirstLevelMenuQuery request, CancellationToken cancellationToken)
     {
         return await _menuService.GetFirstLevelMenusAsync();
     }

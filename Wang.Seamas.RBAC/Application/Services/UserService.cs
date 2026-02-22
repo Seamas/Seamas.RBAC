@@ -27,6 +27,13 @@ public class UserService(ISqlSugarClient db, IPasswordHasher passwordHasher) : I
         return id;
     }
 
+    public async Task<List<UserDto>> GetAllUsersAsync()
+    {
+        return await db.Queryable<User>()
+            .Select(item => new UserDto{ Id = item.Id, Username = item.Username, Nickname = item.Nickname,  Email = item.Email, IsEnabled = item.IsEnabled })
+            .ToListAsync();
+    }
+
     public async Task<bool> UpdateUserProfileAsync(int userId, string? nickname = null, string? email = null)
     {
         var update = db.Updateable<User>().Where(u => u.Id == userId);
@@ -102,5 +109,13 @@ public class UserService(ISqlSugarClient db, IPasswordHasher passwordHasher) : I
         var query = db.Queryable<User>();
         query.Where(x => x.Username == username);
         return !await query.AnyAsync();
+    }
+
+    public async Task<List<Role>> GetRolesByUserIdAsync(int userId)
+    {
+        return await db.Queryable<Role>()
+            .InnerJoin<UserRole>((r, ur) => r.Id == ur.RoleId)
+            .Where((r, ur) => ur.UserId == userId)
+            .ToListAsync();
     }
 }

@@ -69,4 +69,14 @@ public interface IMenuService
     Task<bool> EnableMenuAsync(int menuId, bool enabled);
 
     
+    Task<List<Menu>> GetAllMenusAsync();
+    
+    
+    Task<List<Menu>> GetMenusByRoleIdAsync(int roleId);
+    
+    
+    Task<List<Menu>> GetMenusByUserIdAsync(int userId);
+
+
+    Task<List<Menu>> GetMenuPermissionsByUserIdAsync(int userId);
 }

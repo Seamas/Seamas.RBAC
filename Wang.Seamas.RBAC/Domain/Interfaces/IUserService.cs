@@ -1,5 +1,3 @@
-
-using Wang.Seamas.RBAC.Application.DTOs;
 using Wang.Seamas.RBAC.Application.Features.Users.DTOs;
 using Wang.Seamas.RBAC.Domain.Common;
 using Wang.Seamas.RBAC.Domain.Entities;
@@ -10,6 +8,8 @@ public interface IUserService
 {
     // 创建新用户（需提供初始密码）
     Task<int> CreateUserAsync(User user, string password);
+
+    Task<List<UserDto>> GetAllUsersAsync();
 
     // 更新用户基本信息（不包含密码）
     Task<bool> UpdateUserProfileAsync(int userId, string? nickname, string? email = null);
@@ -34,4 +34,7 @@ public interface IUserService
 
 
     Task<bool> CheckUsernameAsync(string username);
+
+    Task<List<Role>> GetRolesByUserIdAsync(int userId);
+
 }

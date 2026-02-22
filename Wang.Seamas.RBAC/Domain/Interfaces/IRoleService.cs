@@ -1,5 +1,6 @@
 
 
+using Wang.Seamas.RBAC.Application.Features.Users.DTOs;
 using Wang.Seamas.RBAC.Domain.Common;
 using Wang.Seamas.RBAC.Domain.Entities;
 
@@ -28,4 +29,9 @@ public interface IRoleService
     Task<bool> DeleteRoleAsync(int roleId);
 
     Task<bool> CheckCodeAsync(int? id, string code);
+    
+
+    Task<List<UserDto>> GetUsersByRoleAsync(int roleId);
+
+    Task<bool> AssignUsersAsync(int roleId, List<int> userIds);
 }

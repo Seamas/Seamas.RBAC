@@ -24,6 +24,14 @@ public class ApiEndpointService(ISqlSugarClient db) : IApiEndpointService
     public async Task<List<ApiEndpoint>> GetAllApiEndpointsAsync()
         => await db.Queryable<ApiEndpoint>().ToListAsync();
 
+    public async Task<List<ApiEndpoint>> GetApiEndpointByRoleAsync(int roleId)
+    {
+        return await db.Queryable<ApiEndpoint>()
+            .InnerJoin<RoleApiPermission>((a, ra) => a.Id == ra.ApiEndpointId)
+            .Where((a, ra) => ra.RoleId == roleId)
+            .ToListAsync();
+    }
+
     public async Task<ApiEndpoint?> GetApiEndpointByUrlAsync(string url)
         => await db.Queryable<ApiEndpoint>().Where(a => a.Url == url).FirstAsync();
 
@@ -75,26 +83,34 @@ public class ApiEndpointService(ISqlSugarClient db) : IApiEndpointService
             .Where(x => x.Id == id)
             .ExecuteCommandAsync() > 0;
     
-    public async Task<bool> InitApiEndpointsAsync(IEnumerable<string> apiEndpoints)
+    public async Task<bool> InitApiEndpointsAsync(List<ApiEndpoint> apiEndpoints)
     {
         var existEndpointsFromDb = await db.Queryable<ApiEndpoint>().Select(item => item.Url).ToListAsync();
         var existEndpoints = new HashSet<string>(existEndpointsFromDb);
-        var list = apiEndpoints.Where(item => !existEndpoints.Contains(item))
+        var list = apiEndpoints.Where(item => !existEndpoints.Contains(item.Url))
             .ToList();
         
         if (list.Any())
         {
-            var endpoints = list.Select(item => new ApiEndpoint() { Url = item })
-                .ToList();
-            await db.Ado.UseTranAsync(async () =>
-            {
-                foreach (var endpoint in endpoints)
-                {
-                    await db.Insertable<ApiEndpoint>(endpoint).IgnoreInsertError().ExecuteCommandAsync();
-                }
-            });
+            await db.Insertable<ApiEndpoint>(list).ExecuteCommandAsync();
         }
         
         return true;
+    }
+
+    public async Task<List<ApiEndpoint>> GetApiPermissionsByUserIdAsync(int userId)
+    {
+        return await db.Queryable<ApiEndpoint>()
+            .InnerJoin<UserApiPermission>((a, ua) => a.Id == ua.ApiEndpointId && ua.UserId == userId)
+            .ToListAsync();
+    }
+
+    public async Task<List<ApiEndpoint>> GetApisByUserIdAsync(int userId)
+    {
+        return await db.Queryable<ApiEndpoint>()
+            .InnerJoin<RoleApiPermission>((a, ra) => a.Id == ra.ApiEndpointId)
+            .InnerJoin<UserRole>((a, ra, ur) => ra.RoleId == ur.RoleId && ur.UserId == userId)
+            .Distinct()
+            .ToListAsync();
     }
 }

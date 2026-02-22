@@ -23,6 +23,11 @@ public class Menu
     public string? Path { get; set; }
     
     /// <summary>
+    /// 菜单图标
+    /// </summary>
+    public string? Icon { get; set; }
+    
+    /// <summary>
     /// 父节点
     /// </summary>
     public int? ParentId { get; set; }
